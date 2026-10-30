@@ -1,0 +1,98 @@
+services:
+  mosquitto:
+    image: eclipse-mosquitto:1.6.12
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+    networks:
+      - internal_net
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "mosquitto_sub -h localhost -p 1883 -t '$$SYS/broker/version' -C 1 -W 2",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
+
+  room1:
+    build: sensor_temperature
+    environment:
+      MQTT_HOST: mosquitto
+      SENSOR_ROOM: room1
+      SENSOR_TOPIC_DATA: room1/temperature
+      SENSOR_TOPIC_STATUS: room1/heatpump
+    depends_on:
+      mosquitto:
+        condition: service_healthy
+    networks:
+      - internal_net
+
+  room2:
+    build: sensor_temperature
+    environment:
+      MQTT_HOST: mosquitto
+      SENSOR_ROOM: room2
+      SENSOR_TOPIC_DATA: room2/temperature
+      SENSOR_TOPIC_STATUS: room2/heatpump
+    depends_on:
+      mosquitto:
+        condition: service_healthy
+    networks:
+      - internal_net
+
+  room3:
+    build: sensor_temperature
+    environment:
+      MQTT_HOST: mosquitto
+      SENSOR_ROOM: room3
+      SENSOR_TOPIC_DATA: room3/temperature
+      SENSOR_TOPIC_STATUS: room3/heatpump
+    depends_on:
+      mosquitto:
+        condition: service_healthy
+    networks:
+      - internal_net
+
+  living_room:
+    build: sensor_temperature
+    environment:
+      MQTT_HOST: mosquitto
+      SENSOR_ROOM: living_room
+      SENSOR_TOPIC_DATA: living_room/temperature
+      SENSOR_TOPIC_STATUS: living_room/heatpump
+    depends_on:
+      mosquitto:
+        condition: service_healthy
+    networks:
+      - internal_net
+
+  office:
+    build: sensor_temperature
+    environment:
+      MQTT_HOST: mosquitto
+      SENSOR_ROOM: office
+      SENSOR_TOPIC_DATA: office/temperature
+      SENSOR_TOPIC_STATUS: office/heatpump
+    depends_on:
+      mosquitto:
+        condition: service_healthy
+    networks:
+      - internal_net
+
+  gateway:
+    build: gateway
+    environment:
+      MQTT_HOST: mosquitto
+    depends_on:
+      mosquitto:
+        condition: service_healthy
+    networks:
+      - internal_net
+
+networks:
+  internal_net:
+    driver: bridge
